@@ -1,8 +1,10 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request,redirect, flash
+
 from dao.aluno_dao import AlunoDAO
 from dao.professor_dao import ProfessorDAO
 
 app = Flask(__name__)
+app.secret_key = "uma_chave_muito_secreta_e_unica"
 
 
 @app.route('/')
@@ -31,6 +33,28 @@ def listar_aluno():
     lista = dao.listar()
     return render_template('aluno/lista.html',lista=lista)
 
+# Rota para exibir o formulário
+@app.route('/aluno/form') # rota formulario de aluno
+def form_aluno():
+    # rederiza o arquivo formulario com aluno vazio
+    return render_template('aluno/form.html',aluno=None) 
+
+@app.route('/aluno/salvar/', methods=['POST'])  # Inserção
+def salvar_aluno(id=None):
+    nome = request.form['nome']
+    idade = request.form['idade']
+    cidade = request.form['cidade']
+    dao = AlunoDAO()
+    result = dao.salvar(id, nome, idade, cidade) 
+
+    if result["status"] == "ok":
+        flash("Aluno salvo com sucesso!", "success")
+    else:
+        flash(result["mensagem"], "danger")
+
+    return redirect('/aluno')
+
+
 
 @app.route('/professor')
 def listar_professor():
@@ -39,16 +63,28 @@ def listar_professor():
     return render_template('professor/lista.html',lista=lista)
 
 
+@app.route('/saudacao1/<nome>')
+def saudacao1(nome):
+    # gravar no banco nome
+    # dao.salvar(nome)
+    return render_template('saudacao/saudacao.html',valor_recebido=nome)
 
 
-@app.route('/turma')
-def listar_turma():
-    DB_PATH = "banco_escola.db"
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('select turma.id, semestre, nome_curso, professor.nome from turma join curso on curso.id=turma.curso_id join professor on professor.id=turma.professor_id')
-    lista = cursor.fetchall()
-    return render_template('turma/lista.html',lista=lista)
+
+@app.route('/saudacao2/')
+def saudacao2():
+    nome = request.args.get('nome')
+    return render_template('saudacao/saudacao.html',valor_recebido=nome)
+
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    usuario = request.form['usuario']
+    senha = request.form['senha']
+    email = request.form['email']
+    dados = f"Usuário: {usuario}, Senha: {senha}, E-mail: {email}"
+    return render_template('saudacao/saudacao.html',valor_recebido=dados)
 
 
 
