@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request,redirect, flash
+from flask import Flask, render_template, request, redirect, flash
 
 from dao.aluno_dao import AlunoDAO
 from dao.professor_dao import ProfessorDAO
@@ -36,25 +36,41 @@ def listar_aluno():
 # Rota para exibir o formulário
 @app.route('/aluno/form') # rota formulario de aluno
 def form_aluno():
-    # rederiza o arquivo formulario com aluno vazio
     return render_template('aluno/form.html',aluno=None) 
 
+
 @app.route('/aluno/salvar/', methods=['POST'])  # Inserção
+@app.route('/aluno/salvar/<int:id>', methods=['POST'])  # Atualização
 def salvar_aluno(id=None):
     nome = request.form['nome']
     idade = request.form['idade']
-    cidade = request.form['cidade']
-    dao = AlunoDAO()
-    result = dao.salvar(id, nome, idade, cidade) 
-
+    cidade = request.form['cidade'] 
+    dao = AlunoDAO() 
+    result = dao.salvar(id, nome, idade, cidade)
     if result["status"] == "ok":
-        flash("Aluno salvo com sucesso!", "success")
+        flash("Registro salvo com sucesso!", "success")
     else:
-        flash(result["mensagem"], "danger")
-
+        flash(result["mensagem"], "danger")  
+    # salvar esses dados no banco
     return redirect('/aluno')
 
 
+@app.route('/aluno/editar/<int:id>')
+def editar_aluno(id):
+    dao = AlunoDAO()
+    aluno = dao.buscar_por_id(id)
+    return render_template('aluno/form.html', aluno=aluno)
+
+
+@app.route("/aluno/remover/<int:id>")
+def remover_aluno(id):
+    dao = AlunoDAO()
+    resultado = dao.remover(id)
+    if resultado["status"] == "ok":
+        flash("Registro removido com sucesso!", "success")
+    else:
+        flash(resultado["mensagem"], "danger")  
+    return redirect('/aluno')
 
 @app.route('/professor')
 def listar_professor():
@@ -108,6 +124,30 @@ if __name__ == '__main__':
 
 
 """
+
+# Rota para exibir o formulário
+@app.route('/aluno/form') # rota formulario de aluno
+def form_aluno():
+    #aluno = [0, "Fulano de Tal", 18, "Teresina"]
+    # rederiza o arquivo formulario com aluno vazio
+    return render_template('aluno/form.html',aluno=None) 
+
+@app.route('/aluno/salvar/', methods=['POST'])  # Inserção
+def salvar_aluno(id=None):
+    nome = request.form['nome']
+    idade = request.form['idade']
+    cidade = request.form['cidade']
+    dao = AlunoDAO()
+    result = dao.salvar(id, nome, idade, cidade) 
+
+    if result["status"] == "ok":
+        flash("Aluno salvo com sucesso!", "success")
+    else:
+        flash(result["mensagem"], "danger")
+
+    return redirect('/aluno')
+
+
 lista_alunos = [
         (1, "Ana Beatriz Silva", 20, "Teresina"),
         (2, "Carlos Eduardo Lima", 22, "Parnaíba"),
@@ -152,5 +192,8 @@ lista_alunos = [
     
 context = {'msg': 'Teste', 'lista_alunos': alunos}
 return render_template('aluno/lista.html', **context)
+
+
+
 
 """
